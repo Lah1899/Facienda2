@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Facienda2"
         mc:Ignorable="d"
-        Title="Facienda 2.0.0" Height="600" Width="900"
+        Title="Facienda 2.0.1" Height="600" Width="900"
         Background="#F5F7FA"
         Icon="icon.ico"
         Closing="MainWindow_Closing">
@@ -108,6 +108,12 @@
                 <Style TargetType="ContentPresenter">
                     <Setter Property="Canvas.Left" Value="{Binding PositionX}"/>
                     <Setter Property="Canvas.Top" Value="{Binding PositionY}"/>
+                    <Setter Property="Panel.ZIndex" Value="0"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsDone}" Value="True">
+                            <Setter Property="Panel.ZIndex" Value="-1"/>
+                        </DataTrigger>
+                    </Style.Triggers>
                 </Style>
             </ItemsControl.ItemContainerStyle>
 
