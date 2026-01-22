@@ -162,6 +162,13 @@ namespace Facienda2
             dlg.ShowDialog();
         }
 
+        // タスクカードを最前面にもってくる
+        private void BringTaskToFront(TaskItem task)
+        {
+            var currentIndex = _root.Tasks.IndexOf(task);
+            _root.Tasks.Move(currentIndex, _root.Tasks.Count - 1);
+        }
+
         // 以下はイベントハンドラ
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -188,6 +195,7 @@ namespace Facienda2
                 _draggingTask = task;
                 _startPosition = e.GetPosition(this);
                 _lastPosition = e.GetPosition(this);
+                BringTaskToFront(_draggingTask);
                 checkBox.CaptureMouse();
                 // e.Handled = true; // 完了ステータスのトグルを防ぐ
             }

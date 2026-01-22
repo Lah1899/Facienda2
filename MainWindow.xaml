@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Facienda2"
         mc:Ignorable="d"
-        Title="Facienda 2.1.0" Height="600" Width="900"
+        Title="Facienda 2.2.0" Height="600" Width="900"
         Background="#F5F7FA"
         Icon="icon.ico"
         Closing="MainWindow_Closing">
