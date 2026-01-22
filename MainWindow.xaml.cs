@@ -31,6 +31,8 @@ namespace Facienda2
         private Point _startPosition; // ドラッグ開始位置
         private Point _lastPosition; // ドラッグ中の位置
         private TaskItem _draggingTask; // ドラッグ中のタスク
+        private BannerItem _draggingBanner; // ドラッグ中のバナー
+
         public MainWindow()
         {
             InitializeComponent();
@@ -43,7 +45,6 @@ namespace Facienda2
             DataContext = _root;
             Width = _root.Settings.Width; // ウィンドウ幅の設定
             Height = _root.Settings.Height; // ウィンドウ高さの設定
-            // CreateRect(); // 矩形作成処理をハードコーディング（後日直す）
         }
 
         // Jsonからのデータ読み込み
@@ -55,6 +56,7 @@ namespace Facienda2
             // _rootがNullの場合は初期化しておく
             if (_root == null) { _root = new Root(); }
             if (_root.Tasks == null) { _root.Tasks = new ObservableCollection<TaskItem>(); }
+            if (_root.Banners == null) { _root.Banners = new ObservableCollection<BannerItem>(); }
             if (_root.Settings == null) { _root.Settings = new Settings() { Width = 900, Height = 600 }; }
         }
 
@@ -69,6 +71,13 @@ namespace Facienda2
         public void RenameTask(TaskItem task, string name)
         {
             task.Name = name;
+            SaveJson();
+        }
+
+        // バナーのリネーム
+        public void RenameBanner(BannerItem banner, string name)
+        {
+            banner.Name = name;
             SaveJson();
         }
 
@@ -99,6 +108,13 @@ namespace Facienda2
             SaveJson();
         }
 
+        // バナーの削除
+        private void DeleteBanner(BannerItem banner)
+        {
+            _root.Banners.Remove(banner); // Rootのリストから削除
+            SaveJson();
+        }
+
         // タスクの新規作成
         private void CreateTask(string name)
         {
@@ -113,6 +129,19 @@ namespace Facienda2
             OpenTaskWindow(newtask); // タスク作成直後に命名をさせる
         }
 
+        // バナーの新規作成
+        private void CreateBanner(string name)
+        {
+            BannerItem newbanner = new BannerItem();
+            newbanner.Name = name;
+            newbanner.Id = Guid.NewGuid().ToString();
+            newbanner.PositionX = 100;
+            newbanner.PositionY = 100;
+            _root.Banners.Add(newbanner);
+            SaveJson();
+            OpenBannerWindow(newbanner); // バナー作成直後に命名をさせる
+        }
+
         // タスク編集ウィンドウの起動
         private void OpenTaskWindow(TaskItem task)
         {
@@ -123,35 +152,14 @@ namespace Facienda2
             dlg.ShowDialog();
         }
 
-        // キャンバス内の矩形生成（いったん自分用にハードコーディング）
-        private void CreateRect()
+        // バナー編集ウィンドウの起動
+        private void OpenBannerWindow(BannerItem banner)
         {
-            Rectangle rect = new Rectangle()
-            {
-                Width = 400,
-                Height = 500,
-                Stroke = Brushes.Orange,
-                StrokeThickness = 2,
-                Fill = Brushes.Transparent
-            };
-            Canvas.SetLeft(rect, 50);
-            Canvas.SetTop(rect, 50);
-            // mainCanvas.Children.Add(rect);
-
-            Label label = new Label()
-            {
-                Content = "今日やる",
-                Foreground = Brushes.Orange,
-                Width = rect.Width,
-                Height = rect.Height,
-                HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Top,
-                Background = Brushes.Transparent,
-                Padding = new Thickness(5)
-            };
-            Canvas.SetLeft(label, 50);
-            Canvas.SetTop(label, 50);
-            // mainCanvas.Children.Add(label);
+            if (banner == null) { return; } // バナーが指定されていない場合は処理を終了する
+            var dlg = new BannerDetailWindow(banner);
+            dlg.owner = this;
+            dlg.Owner = this; // メインウィンドウ中央に出すため
+            dlg.ShowDialog();
         }
 
         // 以下はイベントハンドラ
@@ -163,10 +171,15 @@ namespace Facienda2
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
+            CreateBanner("New Banner");
+        }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
             ClearTasks();
         }
 
-        // ドラッグのためのイベントハンドラたち
+        // タスクカードドラッグのためのイベントハンドラたち
         private void TaskCard_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (sender is CheckBox checkBox && checkBox.DataContext is TaskItem task)
@@ -207,6 +220,39 @@ namespace Facienda2
                 }
                 _isDragging = false;
                 _draggingTask = null;
+                SaveJson(); // ドラッグを終了したら位置をJsonに保存する
+            }
+        }
+
+        // バナーラベルドラッグのためのイベントハンドラたち
+        private void BannerLabel_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is Border border && border.DataContext is BannerItem banner)
+            {
+                _draggingBanner = banner;
+                _startPosition = e.GetPosition(this);
+                _lastPosition = e.GetPosition(this);
+                border.CaptureMouse();
+            }
+        }
+        private void BannerLabel_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (_draggingBanner != null && sender is Border border)
+            {
+                Point currentPosition = e.GetPosition(this);
+                double offsetX = currentPosition.X - _lastPosition.X;
+                double offsetY = currentPosition.Y - _lastPosition.Y;
+                _draggingBanner.PositionX += (int)offsetX;
+                _draggingBanner.PositionY += (int)offsetY;
+                _lastPosition = currentPosition;
+            }
+        }
+        private void BannerLabel_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is Border border)
+            {
+                border.ReleaseMouseCapture();
+                _draggingBanner = null;
                 SaveJson(); // ドラッグを終了したら位置をJsonに保存する
             }
         }
@@ -262,6 +308,15 @@ namespace Facienda2
                 menuItem.DataContext is TaskItem task)
             {
                 DeleteTask(task);
+            }
+        }
+
+        private void MenuItem_DeleteBanner_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem menuItem &&
+                menuItem.DataContext is BannerItem banner)
+            {
+                DeleteBanner(banner);
             }
         }
 
