@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Facienda2"
         mc:Ignorable="d"
-        Title="Facienda 2.2.0" Height="600" Width="900"
+        Title="Facienda 2.3.0" Height="600" Width="900"
         Background="#F5F7FA"
         Icon="icon.ico"
         Closing="MainWindow_Closing">
@@ -327,7 +327,11 @@
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="#6B7280"/>
+                                                <Setter Property="Visibility" Value="Visible"/>
                                                 <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding DueDate}" Value="{x:Null}">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
                                                     <DataTrigger Binding="{Binding IsDone}" Value="True">
                                                         <Setter Property="Foreground" Value="#9CA3AF"/>
                                                     </DataTrigger>
